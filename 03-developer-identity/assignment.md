@@ -1,28 +1,36 @@
 ---
 slug: developer-identity
+id: m9hdwl8puvw0
 type: challenge
-title: "Predefined vs custom roles - the developer identity"
-teaser: "Create dev-alice with a custom role granted on one bucket only."
+title: Predefined vs custom roles - the developer identity
+teaser: Create dev-alice with a custom role granted on one bucket only.
 tabs:
-- title: Terminal
+- id: pllham4c6xwv
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: vkzgxvjeojzj
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: uai0a7stubxw
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: fl0kd1hz447r
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /
   port: 80
 difficulty: intermediate
 timelimit: 2400
+lab_config:
+  default_layout_sidebar_size: 0
+enhanced_loading: null
 ---
 # 2.1 Predefined vs custom roles — the developer identity
 

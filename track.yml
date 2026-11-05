@@ -1,7 +1,10 @@
 slug: gcp-week1-organization-projects-identity
-type: track
+id: cmbnpxpyim6c
+revision: 1
 title: Week 1 — GCP Organization, Projects and Identity
-teaser: Build a small, secure multi-project foundation on Google Cloud by hand - hierarchy, APIs, IAM, service accounts, impersonation, IAM Conditions, org policies and a real access-denied failure drill.
+teaser: Build a small, secure multi-project foundation on Google Cloud by hand - hierarchy,
+  APIs, IAM, service accounts, impersonation, IAM Conditions, org policies and a real
+  access-denied failure drill.
 description: |-
   You just joined the platform team at **Northwind Payments** (a fictional company). Two brand-new Google Cloud projects - **dev** and **staging** - have been vended for a new service. Nothing is set up yet.
 
@@ -21,24 +24,28 @@ description: |-
   Every step tells you *what* to achieve - the exact commands are hidden until you open them.
 icon: ""
 tags:
+- devops
 - gcp
 - iam
-- service-accounts
 - least-privilege
-- devops
-owner: instruqt
+- service-accounts
+owner: instruqt-support
 developers:
 - shiv@instruqt.com
+instructors: []
+skipping_enabled: true
 idle_timeout: 1800
 timelimit: 10800
-extend_ttl: 1800
-skipping_enabled: true
 lab_config:
+  extend_ttl: 0
   sidebar_enabled: true
+  hideStopButton: false
   feedback_recap_enabled: true
   feedback_tab_enabled: false
-  loadingMessages: true
   theme:
     name: modern-dark
+  override_challenge_layout: false
   default_layout: AssignmentRight
   default_layout_sidebar_size: 40
+  loadingMessages: true
+enhanced_loading: null

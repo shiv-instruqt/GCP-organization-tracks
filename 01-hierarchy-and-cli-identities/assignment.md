@@ -1,28 +1,36 @@
 ---
 slug: hierarchy-and-cli-identities
+id: 4itfqwqjm0ml
 type: challenge
-title: "Explore the hierarchy & set up your CLI identities"
-teaser: "Org, folders, projects, billing - and one gcloud identity per project."
+title: Explore the hierarchy & set up your CLI identities
+teaser: Org, folders, projects, billing - and one gcloud identity per project.
 tabs:
-- title: Terminal
+- id: 9yctif4zwuaf
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: c8lzrlx3mgjv
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: ofxrers6blav
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: s65gjvb00j9t
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /
   port: 80
 difficulty: intermediate
 timelimit: 2400
+lab_config:
+  default_layout_sidebar_size: 0
+enhanced_loading: null
 ---
 # Week 1 — GCP organization, projects and identity
 

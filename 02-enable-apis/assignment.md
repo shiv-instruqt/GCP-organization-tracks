@@ -1,28 +1,36 @@
 ---
 slug: enable-apis
+id: gxedg1f5lbo2
 type: challenge
-title: "Enable the required APIs with gcloud"
-teaser: "Enable APIs per project and document which identity did it."
+title: Enable the required APIs with gcloud
+teaser: Enable APIs per project and document which identity did it.
 tabs:
-- title: Terminal
+- id: hn3p7opehj7i
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: difefwvl8eeq
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: 8x6misuuqkmc
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: r5c2flhffklk
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /
   port: 80
 difficulty: intermediate
 timelimit: 1800
+lab_config:
+  default_layout_sidebar_size: 0
+enhanced_loading: null
 ---
 # 1.2 Enable the required APIs with gcloud
 

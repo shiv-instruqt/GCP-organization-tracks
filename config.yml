@@ -5,23 +5,23 @@ containers:
   shell: /bin/bash
   ports:
   - 80
+  environment:
+    LANG: C.UTF-8
   memory: 1024
+  resources:
+    memory: 1024
 gcp_projects:
-# dev: where the developer identity (dev-alice) works
 - name: northwinddev
   services:
   - cloudresourcemanager.googleapis.com
   - serviceusage.googleapis.com
-  - iam.googleapis.com
   - iamcredentials.googleapis.com
+  - iam.googleapis.com
   - storage.googleapis.com
-  - policytroubleshooter.googleapis.com
-  - orgpolicy.googleapis.com
   - artifactregistry.googleapis.com
   - run.googleapis.com
   regions:
   - us-central1
-  # granted to BOTH the project's user and service account (platform admin, not owner/editor)
   roles:
   - roles/browser
   - roles/serviceusage.serviceUsageAdmin
@@ -30,16 +30,13 @@ gcp_projects:
   - roles/resourcemanager.projectIamAdmin
   - roles/iam.securityReviewer
   - roles/storage.admin
-# staging: where the deployment pipeline (ci-deployer) deploys
 - name: northwindstaging
   services:
   - cloudresourcemanager.googleapis.com
   - serviceusage.googleapis.com
-  - iam.googleapis.com
   - iamcredentials.googleapis.com
+  - iam.googleapis.com
   - storage.googleapis.com
-  - policytroubleshooter.googleapis.com
-  - orgpolicy.googleapis.com
   - artifactregistry.googleapis.com
   - run.googleapis.com
   regions:
