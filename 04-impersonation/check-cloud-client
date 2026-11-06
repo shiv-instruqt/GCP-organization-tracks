@@ -1,0 +1,42 @@
+#!/bin/bash
+# Check script (t_impersonate_dev) - every condition must pass; the first failure is shown to the learner.
+# shellcheck disable=SC1091
+source /opt/lab/lib.sh 2>/dev/null || { echo "FAIL: The lab environment is still being prepared - wait a minute and click Check again."; exit 1; }
+fail() { echo "FAIL: $*"; exit 1; }
+
+check_one() {
+
+TC=roles/iam.serviceAccountTokenCreator
+case "$CHECK" in
+  token_creator)
+    sa_roles gdev "$DEV_ALICE" "serviceAccount:$DEV_ADMIN_SA" | grep -qx "$TC" \
+      || fail "The dev platform-admin does not hold $TC on $DEV_ALICE."
+    project_roles gdev "$DEV_PROJECT" "serviceAccount:$DEV_ADMIN_SA" | grep -qx "$TC" \
+      && fail "$TC is granted at PROJECT level - that allows impersonating every service account. Remove it and grant on dev-alice only."
+    ;;
+  object_uploaded)
+    gdev storage objects describe "gs://$DEV_BUCKET/hello.txt" --format="value(name)" >/dev/null 2>&1 \
+      || fail "gs://$DEV_BUCKET/hello.txt not found." ;;
+  impersonated_ok)
+    log_ok_as "$DEV_ALICE" || fail "No successful gcloud command acting as $DEV_ALICE in commands.log." ;;
+  impersonated_denied)
+    log_denied_as "$DEV_ALICE" || fail "No denied command acting as $DEV_ALICE yet - try deleting hello.txt as dev-alice." ;;
+  inherit_denied)
+    grep -F "| acting-as=$DEV_ALICE |" "$LOG" 2>/dev/null | grep -E '\| exit=[1-9][0-9]* \|' | grep -Eq -- "-reports" \
+      || fail "No denied attempt by dev-alice to list gs://$DEV_PROJECT-reports in commands.log." ;;
+  inherit_allowed)
+    grep -F "| acting-as=$DEV_ALICE | exit=0 |" "$LOG" 2>/dev/null | grep -Eq -- "-reports" \
+      || fail "No successful listing of gs://$DEV_PROJECT-reports as dev-alice yet (grant on the project, wait ~60 s, retry)." ;;
+  inherit_cleaned)
+    r=$(project_roles gdev "$DEV_PROJECT" "serviceAccount:$DEV_ALICE" | xargs)
+    [ -z "$r" ] || fail "dev-alice still has project-level role(s): $r - remove them." ;;
+  *) fail "Unknown check '$CHECK'" ;;
+esac
+}
+
+for CHECK in token_creator object_uploaded impersonated_ok impersonated_denied inherit_denied inherit_allowed inherit_cleaned; do
+  echo "Checking: $CHECK"
+  check_one
+done
+echo "All checks passed - well done!"
+exit 0

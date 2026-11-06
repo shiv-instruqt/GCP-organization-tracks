@@ -50,7 +50,7 @@ You're the new platform engineer at **Northwind Payments** (fictional). Two empt
 | Where | Identity |
 |-------|----------|
 | Terminal (`gcloud`) | the **platform-admin service account** of each project (key files in `/root/.keys/`) — admin for APIs, service accounts, custom roles and IAM, but **not** Owner/Editor |
-| *Cloud Consoles* tab | each project's console user, with the same roles — use it to look around and for Policy Troubleshooter |
+| *Cloud Consoles* tab | each project's console user, with the same roles — use it to look around (IAM, Cloud Storage, Cloud Run pages) |
 
 Help files: `~/week1/help/cheatsheet.md` and `~/week1/help/troubleshooting.md`.
 

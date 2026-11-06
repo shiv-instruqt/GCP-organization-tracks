@@ -45,7 +45,7 @@ Every Google Cloud service is an API that must be **enabled in a project** befor
 - is itself an auditable action — so you must always know **which identity** enabled what.
 
 > [!NOTE]
-> Calls are charged to a **quota project**. When you impersonate a service account or call Policy Troubleshooter, the API must be enabled in the project of the *calling* credentials — that's why some APIs are needed in both projects.
+> Calls are charged to a **quota project**. When you impersonate a service account, the IAM Service Account Credentials API must be enabled in the project of the *calling* credentials — that's why it is needed in **both** projects.
 
 </details>
 
@@ -55,13 +55,13 @@ Enable these APIs — and nothing you don't need (every enabled API is attack su
 
 | Project | API | Needed for |
 |---------|-----|-----------|
-| dev | `iamcredentials.googleapis.com` | Service-account impersonation (short-lived tokens) |
-| dev | `policytroubleshooter.googleapis.com` | Explaining access-denied results (failure drill) |
-| dev | `orgpolicy.googleapis.com` | Reading effective org policies |
-| staging | `iamcredentials.googleapis.com` | Impersonating the pipeline identity |
+| dev | `iamcredentials.googleapis.com` | Service-account impersonation (short-lived tokens) — acting as `dev-alice` |
+| staging | `iamcredentials.googleapis.com` | Impersonating the pipeline identity `ci-deployer` |
 | staging | `artifactregistry.googleapis.com` | Pipeline pushes images |
 | staging | `run.googleapis.com` | Pipeline deploys to Cloud Run |
-| staging | `orgpolicy.googleapis.com` | Reading effective org policies |
+
+> [!NOTE]
+> This sandbox only allows a fixed list of APIs (an org policy you'll inspect in challenge 7). Anything else — e.g. `compute.googleapis.com` — will be refused.
 
 Then document every row in `~/week1/02-api-enablement.md`: API, project, why, **which identity** enabled it and the command.
 
@@ -93,10 +93,7 @@ Notice a few APIs were already on (Resource Manager, IAM, Service Usage, Cloud S
 gcloud config configurations activate dev
 gcloud config get-value account        # <- the identity that will perform the change
 
-gcloud services enable \
-  iamcredentials.googleapis.com \
-  policytroubleshooter.googleapis.com \
-  orgpolicy.googleapis.com
+gcloud services enable iamcredentials.googleapis.com
 ```
 
 `services enable` is a long-running operation; it returns when done (usually < 1 min).
@@ -115,8 +112,7 @@ gcloud config get-value account
 gcloud services enable \
   iamcredentials.googleapis.com \
   artifactregistry.googleapis.com \
-  run.googleapis.com \
-  orgpolicy.googleapis.com
+  run.googleapis.com
 
 gcloud services list --enabled --format="value(config.name)" | sort
 ```
@@ -152,6 +148,6 @@ Fill the table: one row per API + project. The *Enabled by* column must contain 
 
 Click **Check** when all of these are done (the message tells you which item is still missing):
 
-- [ ] dev: iamcredentials, policytroubleshooter and orgpolicy APIs are enabled
-- [ ] staging: iamcredentials, artifactregistry, run and orgpolicy APIs are enabled
+- [ ] dev: iamcredentials API is enabled
+- [ ] staging: iamcredentials, artifactregistry and run APIs are enabled
 - [ ] `~/week1/02-api-enablement.md` lists every API and the identity that enabled it

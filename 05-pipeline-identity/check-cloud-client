@@ -1,0 +1,48 @@
+#!/bin/bash
+# Check script (t_pipeline) - every condition must pass; the first failure is shown to the learner.
+# shellcheck disable=SC1091
+source /opt/lab/lib.sh 2>/dev/null || { echo "FAIL: The lab environment is still being prepared - wait a minute and click Check again."; exit 1; }
+fail() { echo "FAIL: $*"; exit 1; }
+
+check_one() {
+
+TC=roles/iam.serviceAccountTokenCreator
+ALLOWED="roles/artifactregistry.writer roles/run.developer"
+case "$CHECK" in
+  sas_created)
+    sa_exists gstg "$CI_DEPLOYER" || fail "Service account $CI_DEPLOYER not found."
+    sa_exists gstg "$APP_RUNTIME" || fail "Service account $APP_RUNTIME not found." ;;
+  deployer_roles)
+    r=$(project_roles gstg "$STAGING_PROJECT" "serviceAccount:$CI_DEPLOYER")
+    grep -qx roles/run.developer <<< "$r"           || fail "ci-deployer is missing roles/run.developer on staging."
+    grep -qx roles/artifactregistry.writer <<< "$r" || fail "ci-deployer is missing roles/artifactregistry.writer on staging." ;;
+  no_broad_roles)
+    extra=""
+    for r in $(project_roles gstg "$STAGING_PROJECT" "serviceAccount:$CI_DEPLOYER"); do
+      case " $ALLOWED " in *" $r "*) ;; *) extra="$extra $r" ;; esac
+    done
+    [ -z "$extra" ] || fail "ci-deployer has extra project-level role(s):$extra - only run.developer and artifactregistry.writer are allowed." ;;
+  actas_scoped)
+    sa_roles gstg "$APP_RUNTIME" "serviceAccount:$CI_DEPLOYER" | grep -qx roles/iam.serviceAccountUser \
+      || fail "ci-deployer does not hold roles/iam.serviceAccountUser on $APP_RUNTIME." ;;
+  ci_impersonation)
+    sa_roles gstg "$CI_DEPLOYER" "serviceAccount:$STAGING_ADMIN_SA" | grep -qx "$TC" \
+      || fail "The staging platform-admin does not hold $TC on $CI_DEPLOYER."
+    project_roles gstg "$STAGING_PROJECT" "serviceAccount:$STAGING_ADMIN_SA" | grep -qx "$TC" \
+      && fail "$TC is granted at PROJECT level for the staging platform-admin - remove it." ;;
+  no_keys)
+    sa_exists gstg "$CI_DEPLOYER" || fail "Service account $CI_DEPLOYER not found."
+    k=$(gstg iam service-accounts keys list --iam-account="$CI_DEPLOYER" --managed-by=user --format="value(name)" 2>/dev/null)
+    [ -z "$k" ] || fail "ci-deployer has user-managed key(s). Delete them - pipelines should use impersonation / Workload Identity Federation." ;;
+  tested)
+    log_ok_as "$CI_DEPLOYER" || fail "No successful gcloud command acting as $CI_DEPLOYER in commands.log." ;;
+  *) fail "Unknown check '$CHECK'" ;;
+esac
+}
+
+for CHECK in sas_created deployer_roles no_broad_roles actas_scoped ci_impersonation no_keys tested; do
+  echo "Checking: $CHECK"
+  check_one
+done
+echo "All checks passed - well done!"
+exit 0

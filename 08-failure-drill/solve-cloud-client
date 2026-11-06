@@ -1,0 +1,45 @@
+#!/bin/bash
+# Solve script (t_drill) - runs when the learner skips this challenge.
+# shellcheck disable=SC1091
+source /opt/lab/lib.sh || exit 1
+
+solve_one() {
+
+PERMS="storage.buckets.get,storage.objects.get,storage.objects.list,storage.objects.create"
+case "$CHECK" in
+  broke_it)
+    log_note 0 "$DEV_ADMIN_SA" "gcloud iam roles update appDeveloper --project=$DEV_PROJECT --remove-permissions=storage.objects.list   # (auto-solved)" ;;
+  saw_denial)
+    log_note 1 "$DEV_ALICE" "gcloud storage ls gs://$DEV_BUCKET --impersonate-service-account=$DEV_ALICE   # (auto-solved)" ;;
+  permission_test_saved)
+    [ -s "$W1/05-permission-test.txt" ] || printf '{"kind": "storage#testIamPermissionsResponse", "permissions": ["storage.objects.get", "storage.objects.create"]}\n# (auto-solved placeholder)\n' > "$W1/05-permission-test.txt" ;;
+  narrow_fix)
+    gdev iam roles update appDeveloper --project="$DEV_PROJECT" --permissions="$PERMS" >/dev/null ;;
+  broad_removed)
+    for r in roles/storage.admin roles/storage.objectAdmin roles/editor roles/owner; do
+      gdev storage buckets remove-iam-policy-binding "gs://$DEV_BUCKET" --member="serviceAccount:$DEV_ALICE" --role="$r" >/dev/null 2>&1
+      gdev projects remove-iam-policy-binding "$DEV_PROJECT" --member="serviceAccount:$DEV_ALICE" --role="$r" --all >/dev/null 2>&1
+    done; true ;;
+  notes)
+    cat > "$W1/05-failure-drill.md" <<'NOTES'
+# 05 — Failure drill (auto-solved)
+
+Removed storage.objects.list from appDeveloper -> dev-alice got 403 on list.
+testIamPermissions: storage.objects.list missing; appDeveloper binding on the bucket matched but the role no longer included it.
+
+| Option | Role / change | Risk |
+|--------|---------------|------|
+| Broad  | roles/storage.admin on the bucket | delete data, change bucket IAM |
+| Narrow | add storage.objects.list back to appDeveloper | none beyond the need |
+
+Kept the narrow fix.
+NOTES
+    ;;
+esac
+}
+
+for CHECK in broke_it saw_denial permission_test_saved narrow_fix broad_removed notes; do
+  echo "Solving: $CHECK"
+  solve_one
+done
+exit 0

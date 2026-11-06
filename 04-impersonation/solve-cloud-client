@@ -1,0 +1,36 @@
+#!/bin/bash
+# Solve script (t_impersonate_dev) - runs when the learner skips this challenge.
+# shellcheck disable=SC1091
+source /opt/lab/lib.sh || exit 1
+
+solve_one() {
+
+case "$CHECK" in
+  token_creator)
+    gdev iam service-accounts add-iam-policy-binding "$DEV_ALICE" \
+      --member="serviceAccount:$DEV_ADMIN_SA" --role=roles/iam.serviceAccountTokenCreator >/dev/null ;;
+  object_uploaded)
+    echo "hello from alice" > /root/week1/hello.txt
+    gdev storage cp /root/week1/hello.txt "gs://$DEV_BUCKET/hello.txt" ;;
+  impersonated_ok)
+    log_note 0 "$DEV_ALICE" "gcloud storage ls gs://$DEV_BUCKET --impersonate-service-account=$DEV_ALICE   # (auto-solved)" ;;
+  impersonated_denied)
+    log_note 1 "$DEV_ALICE" "gcloud storage rm gs://$DEV_BUCKET/hello.txt --impersonate-service-account=$DEV_ALICE   # (auto-solved)" ;;
+  inherit_denied)
+    gdev storage buckets describe "gs://$DEV_PROJECT-reports" >/dev/null 2>&1 || \
+      gdev storage buckets create "gs://$DEV_PROJECT-reports" --location="$LAB_REGION" --uniform-bucket-level-access
+    log_note 1 "$DEV_ALICE" "gcloud storage ls gs://$DEV_PROJECT-reports --impersonate-service-account=$DEV_ALICE   # (auto-solved)" ;;
+  inherit_allowed)
+    log_note 0 "$DEV_ALICE" "gcloud storage ls gs://$DEV_PROJECT-reports --impersonate-service-account=$DEV_ALICE   # (auto-solved)" ;;
+  inherit_cleaned)
+    for r in $(project_roles gdev "$DEV_PROJECT" "serviceAccount:$DEV_ALICE"); do
+      gdev projects remove-iam-policy-binding "$DEV_PROJECT" --member="serviceAccount:$DEV_ALICE" --role="$r" --all >/dev/null
+    done ;;
+esac
+}
+
+for CHECK in token_creator object_uploaded impersonated_ok impersonated_denied inherit_denied inherit_allowed inherit_cleaned; do
+  echo "Solving: $CHECK"
+  solve_one
+done
+exit 0

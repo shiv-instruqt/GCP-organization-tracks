@@ -1,0 +1,47 @@
+#!/bin/bash
+# Check script (t_drill) - every condition must pass; the first failure is shown to the learner.
+# shellcheck disable=SC1091
+source /opt/lab/lib.sh 2>/dev/null || { echo "FAIL: The lab environment is still being prepared - wait a minute and click Check again."; exit 1; }
+fail() { echo "FAIL: $*"; exit 1; }
+
+check_one() {
+
+EXPECTED="storage.buckets.get storage.objects.create storage.objects.get storage.objects.list"
+BREAK_RE='iam roles update.*appDeveloper.*remove-permissions[= ]+["'"'"']?storage\.objects\.list'
+case "$CHECK" in
+  broke_it)
+    grep -F "| exit=0 |" "$LOG" 2>/dev/null | grep -Eq "$BREAK_RE" \
+      || fail "No successful '--remove-permissions=storage.objects.list' on appDeveloper in commands.log." ;;
+  saw_denial)
+    n=$(grep -nE "$BREAK_RE" "$LOG" 2>/dev/null | grep -F "| exit=0 |" | tail -1 | cut -d: -f1)
+    [ -n "$n" ] || fail "Remove the permission first (step 1)."
+    tail -n +"$((n+1))" "$LOG" | grep -F "| acting-as=$DEV_ALICE |" | grep -Eq '\| exit=[1-9][0-9]* \|' \
+      || fail "No denied command as dev-alice AFTER removing the permission. Wait for propagation and retry the list." ;;
+  permission_test_saved)
+    f="$W1/05-permission-test.txt"
+    [ -s "$f" ] || fail "~/week1/05-permission-test.txt is missing or empty."
+    grep -q "testIamPermissionsResponse" "$f" || fail "05-permission-test.txt does not contain a testIamPermissions answer from the bucket."
+    grep -q '"storage.objects.list"' "$f" && fail "05-permission-test.txt still shows storage.objects.list - capture it while the permission is removed." ;;
+  narrow_fix)
+    have=$(custom_role_perms gdev appDeveloper | sort | xargs)
+    [ "$have" = "$EXPECTED" ] || fail "appDeveloper has [$have] - expected exactly [$EXPECTED]." ;;
+  broad_removed)
+    bad=$( { bucket_roles "$DEV_BUCKET" "serviceAccount:$DEV_ALICE"; project_roles gdev "$DEV_PROJECT" "serviceAccount:$DEV_ALICE"; } \
+           | grep -Ex "roles/(storage\.admin|storage\.objectAdmin|editor|owner)" | xargs)
+    [ -z "$bad" ] || fail "dev-alice still holds broad role(s): $bad" ;;
+  notes)
+    f="$W1/05-failure-drill.md"
+    [ -f "$f" ] || fail "05-failure-drill.md not found."
+    grep -q "storage.admin" "$f" || fail "Mention roles/storage.admin (the broad option) in 05-failure-drill.md."
+    grep -q "appDeveloper" "$f"  || fail "Mention appDeveloper (the narrow option) in 05-failure-drill.md."
+    no_todo "$f" || fail "05-failure-drill.md still contains _TODO_ placeholders." ;;
+  *) fail "Unknown check '$CHECK'" ;;
+esac
+}
+
+for CHECK in broke_it saw_denial permission_test_saved narrow_fix broad_removed notes; do
+  echo "Checking: $CHECK"
+  check_one
+done
+echo "All checks passed - well done!"
+exit 0

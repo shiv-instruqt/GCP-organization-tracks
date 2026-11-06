@@ -1,0 +1,38 @@
+#!/bin/bash
+# Solve script (t_org_policy) - runs when the learner skips this challenge.
+# shellcheck disable=SC1091
+source /opt/lab/lib.sh || exit 1
+
+solve_one() {
+
+case "$CHECK" in
+  read_policies)
+    log_note 0 "$DEV_ADMIN_SA" "gcloud resource-manager org-policies describe iam.disableServiceAccountKeyCreation --project=$DEV_PROJECT --effective   # (auto-solved)" ;;
+  guardrail_tested)
+    log_note 1 "$DEV_ADMIN_SA" "gcloud services enable compute.googleapis.com   # (auto-solved)" ;;
+  boundary_tested)
+    log_note 1 "$CI_DEPLOYER" "gcloud storage ls gs://$DEV_BUCKET --impersonate-service-account=$CI_DEPLOYER   # (auto-solved)" ;;
+  notes)
+    cat > "$W1/04-org-policy-quotas.md" <<NOTES
+# 04 — Org policies, project boundaries & quotas (auto-solved)
+
+## Effective org policies
+$(gdev resource-manager org-policies list --project="$DEV_PROJECT" 2>&1 | head -20)
+- iam.disableServiceAccountKeyCreation: blocks SA keys -> use impersonation / WIF.
+- gcp.resourceLocations: limits where resources may be created.
+
+## Project boundary test
+ci-deployer (staging) was denied storage.objects.list on gs://$DEV_BUCKET (dev): access is decided by the resource's IAM policy.
+
+## Quota
+run.googleapis.com - see consumerQuotaMetrics; raise via Quotas page / quota increase request.
+NOTES
+    ;;
+esac
+}
+
+for CHECK in read_policies guardrail_tested boundary_tested notes; do
+  echo "Solving: $CHECK"
+  solve_one
+done
+exit 0

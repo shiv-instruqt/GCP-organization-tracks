@@ -16,8 +16,8 @@ description: |-
   - use **service account impersonation** instead of keys
   - build a least-privilege **deployment pipeline** identity with a narrowly scoped `actAs`
   - grant **time-bound, cross-project** access with **IAM Conditions**
-  - read **org policies** and **quotas**
-  - run a **failure drill**: remove a permission, diagnose it with **Policy Troubleshooter**, and compare a broad vs the narrowest fix
+  - hit the **org-policy guard-rails** (allowed APIs, locations) and read **quotas**
+  - run a **failure drill**: remove a permission, diagnose the access denial (testIamPermissions + bindings + role), and compare a broad vs the narrowest fix
 
   **Deliverable:** identity map, API enablement notes, CLI command log and a least-privilege table.
 

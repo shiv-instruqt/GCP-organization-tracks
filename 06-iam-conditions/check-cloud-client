@@ -1,0 +1,49 @@
+#!/bin/bash
+# Check script (t_conditions) - every condition must pass; the first failure is shown to the learner.
+# shellcheck disable=SC1091
+source /opt/lab/lib.sh 2>/dev/null || { echo "FAIL: The lab environment is still being prepared - wait a minute and click Check again."; exit 1; }
+fail() { echo "FAIL: $*"; exit 1; }
+
+check_one() {
+
+B=$(project_bindings gstg "$STAGING_PROJECT" "serviceAccount:$DEV_ALICE")
+COND=$(awk -F'\t' '$1=="roles/storage.objectViewer" && $3 ~ /request\.time/' <<< "$B")
+
+case "$CHECK" in
+  conditional_binding)
+    [ -n "$COND" ] || fail "No roles/storage.objectViewer binding WITH a request.time condition for dev-alice in staging."
+    awk -F'\t' '$2==""' <<< "$COND" | grep -q . && fail "Give the condition a title (title=...)."
+    ;;
+  expiry_window)
+    [ -n "$COND" ] || fail "Create the conditional binding first."
+    "$PY" - "$COND" <<'PY' || fail "The condition's timestamp must be in the future and at most 30 days from now."
+import re, sys, datetime as dt
+now = dt.datetime.now(dt.timezone.utc)
+ok = False
+for line in sys.argv[1].splitlines():
+    expr = line.split("\t")[2]
+    for ts in re.findall(r"timestamp\(\s*['\"]([^'\"]+)['\"]\s*\)", expr):
+        try:
+            t = dt.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if now < t <= now + dt.timedelta(days=31):
+            ok = True
+if not ok:
+    sys.exit(1)
+PY
+    ;;
+  no_unconditional)
+    u=$(awk -F'\t' '$3==""{print $1}' <<< "$B" | xargs)
+    [ -z "$u" ] || fail "dev-alice has UNCONDITIONAL access in staging: $u - remove it."
+    ;;
+  *) fail "Unknown check '$CHECK'" ;;
+esac
+}
+
+for CHECK in conditional_binding expiry_window no_unconditional; do
+  echo "Checking: $CHECK"
+  check_one
+done
+echo "All checks passed - well done!"
+exit 0

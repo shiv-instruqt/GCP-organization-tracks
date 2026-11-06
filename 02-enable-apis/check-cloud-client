@@ -6,8 +6,8 @@ fail() { echo "FAIL: $*"; exit 1; }
 
 check_one() {
 
-DEV_APIS="iamcredentials.googleapis.com policytroubleshooter.googleapis.com orgpolicy.googleapis.com"
-STG_APIS="iamcredentials.googleapis.com artifactregistry.googleapis.com run.googleapis.com orgpolicy.googleapis.com"
+DEV_APIS="iamcredentials.googleapis.com"
+STG_APIS="iamcredentials.googleapis.com artifactregistry.googleapis.com run.googleapis.com"
 
 missing() { # missing <gdev|gstg> <api...>
   local fn=$1 enabled out=""; shift
@@ -26,10 +26,10 @@ case "$CHECK" in
   api_notes)
     f="$W1/02-api-enablement.md"
     [ -f "$f" ] || fail "02-api-enablement.md not found."
-    for a in iamcredentials policytroubleshooter orgpolicy artifactregistry run.googleapis.com; do
+    for a in iamcredentials artifactregistry run.googleapis.com; do
       grep -q "$a" "$f" || fail "02-api-enablement.md does not mention $a."
     done
-    grep -qE "platform-admin[a-z-]*@" "$f" || fail "Add the identity (platform-admin email) that enabled each API."
+    grep -qE "@[a-z0-9-]+\.iam\.gserviceaccount\.com" "$f" || fail "Add the identity (the service-account email shown in your prompt / commands.log) that enabled each API."
     no_todo "$f" || fail "02-api-enablement.md still contains _TODO_ placeholders."
     ;;
   *) fail "Unknown check '$CHECK'" ;;

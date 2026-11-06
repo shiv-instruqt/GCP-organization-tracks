@@ -7,17 +7,28 @@
 # bootstrap as the Labs 2.0 version (checker credentials, "fresh" APIs, note
 # templates, identity-aware prompt + automatic command log, help files).
 # -----------------------------------------------------------------------------
-set -uo pipefail
+# No "set -e"/"set -u": a track setup script that exits non-zero stops the
+# whole sandbox from starting. Problems are written to /opt/lab/SETUP_ERROR.
+set -o pipefail
+mkdir -p /opt/lab
+setup_error() { echo "[bootstrap] ERROR: $*"; echo "$*" >> /opt/lab/SETUP_ERROR; }
 
-export DEV_PROJECT="${INSTRUQT_GCP_PROJECT_northwinddev_PROJECT_ID}"
-export STAGING_PROJECT="${INSTRUQT_GCP_PROJECT_northwindstaging_PROJECT_ID}"
-export DEV_ADMIN_SA="${INSTRUQT_GCP_PROJECT_northwinddev_SERVICE_ACCOUNT_EMAIL}"
-export STAGING_ADMIN_SA="${INSTRUQT_GCP_PROJECT_northwindstaging_SERVICE_ACCOUNT_EMAIL}"
+# Sandbox names (config.yml / Instruqt sandbox page):
+#   host cloud-client, Google projects northwinddev + northwindstaging
+export DEV_PROJECT="${INSTRUQT_GCP_PROJECT_northwinddev_PROJECT_ID:-}"
+export STAGING_PROJECT="${INSTRUQT_GCP_PROJECT_northwindstaging_PROJECT_ID:-}"
+export DEV_ADMIN_SA="${INSTRUQT_GCP_PROJECT_northwinddev_SERVICE_ACCOUNT_EMAIL:-}"
+export STAGING_ADMIN_SA="${INSTRUQT_GCP_PROJECT_northwindstaging_SERVICE_ACCOUNT_EMAIL:-}"
 export LAB_REGION="us-central1"
 
+if [ -z "$DEV_PROJECT" ] || [ -z "$STAGING_PROJECT" ]; then
+  setup_error "GCP project variables missing (INSTRUQT_GCP_PROJECTS='${INSTRUQT_GCP_PROJECTS:-}'). The sandbox must have Google projects named northwinddev and northwindstaging."
+  exit 0
+fi
+
 mkdir -p /root/.keys && chmod 700 /root/.keys
-echo "${INSTRUQT_GCP_PROJECT_northwinddev_SERVICE_ACCOUNT_KEY}"     | base64 -d > /root/.keys/dev-platform-admin.json
-echo "${INSTRUQT_GCP_PROJECT_northwindstaging_SERVICE_ACCOUNT_KEY}" | base64 -d > /root/.keys/staging-platform-admin.json
+echo "${INSTRUQT_GCP_PROJECT_northwinddev_SERVICE_ACCOUNT_KEY:-}"     | base64 -d > /root/.keys/dev-platform-admin.json     2>/dev/null || setup_error "could not decode the northwinddev key"
+echo "${INSTRUQT_GCP_PROJECT_northwindstaging_SERVICE_ACCOUNT_KEY:-}" | base64 -d > /root/.keys/staging-platform-admin.json 2>/dev/null || setup_error "could not decode the northwindstaging key"
 chmod 600 /root/.keys/*.json
 
 
@@ -28,10 +39,10 @@ WEEK1=/root/week1
 mkdir -p "$LAB_DIR" "$WEEK1"
 
 # Learner-enabled APIs (they are on the sandbox allow-list, but start disabled)
-DISABLE_APIS="iamcredentials.googleapis.com policytroubleshooter.googleapis.com orgpolicy.googleapis.com artifactregistry.googleapis.com run.googleapis.com"
+DISABLE_APIS="iamcredentials.googleapis.com artifactregistry.googleapis.com run.googleapis.com"
 
 # Small tools (best effort - the checks only need python3, which gcloud ships)
-command -v jq >/dev/null 2>&1 || { (apt-get update -qq && apt-get install -y -qq jq) || apk add --no-cache jq; } >/dev/null 2>&1 || true
+# (no package installs: keeps the sandbox start fast)
 
 # --- 1. env + helper library for check scripts ------------------------------
 cat > "$LAB_DIR/env.sh" <<EOF
@@ -236,7 +247,7 @@ _TODO_
 ## 2. The error the developer saw (paste it)
 _TODO_
 
-## 3. What Policy Troubleshooter said (summary - full output in 05-troubleshooter.txt)
+## 3. Diagnosis: testIamPermissions answer (05-permission-test.txt), the binding that applied, and why it didn't grant the permission
 _TODO_
 
 ## 4. Broad fix vs narrow fix
@@ -410,21 +421,21 @@ gcloud iam service-accounts keys list --iam-account=EMAIL --managed-by=user
 --condition="expression=resource.name.startsWith('projects/_/buckets/my-bucket'),title=one-bucket"
 ```
 
-## Policy Troubleshooter
+## Diagnose an access denial (testIamPermissions)
 
 ```bash
-gcloud policy-intelligence troubleshoot-policy iam FULL_RESOURCE_NAME \
-  --principal-email=EMAIL --permission=PERMISSION
-# project : //cloudresourcemanager.googleapis.com/projects/PROJECT_ID
-# bucket  : //storage.googleapis.com/projects/_/buckets/BUCKET
-# SA      : //iam.googleapis.com/projects/PROJECT_ID/serviceAccounts/EMAIL
+TOKEN=$(gcloud auth print-access-token --impersonate-service-account=EMAIL)
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://storage.googleapis.com/storage/v1/b/BUCKET/iam/testPermissions?permissions=storage.objects.list"
+gcloud storage buckets get-iam-policy gs://BUCKET          # which bindings apply
+gcloud iam roles describe ROLE --project=P                 # is the permission in the role?
 ```
 
 ## Org policies
 
 ```bash
-gcloud org-policies list --project=P [--show-unset]
-gcloud org-policies describe CONSTRAINT --project=P --effective
+gcloud resource-manager org-policies list --project=P
+gcloud resource-manager org-policies describe CONSTRAINT --project=P --effective
 ```
 
 ## Shell variables available in every terminal
@@ -445,8 +456,8 @@ cat > "$WEEK1/help/troubleshooting.md" <<'HELP_EOF'
 | `does not have storage.objects.delete access` when uploading | Overwriting an existing object needs `delete` | Upload under a new name — or that's the point of the lesson! |
 | `--condition` errors / prompts for a condition | Policy already has conditional bindings | Add `--condition=None` for unconditional grants |
 | `INVALID_ARGUMENT` on a condition | CEL syntax / quotes | Use `timestamp('2026-12-31T00:00:00Z')` with single quotes inside the double-quoted flag |
-| `PERMISSION_DENIED` on `projects create`, `billing`, `org-policies reset` | Expected — those need folder/org/billing-account roles | Write down *why* in your notes |
-| `troubleshoot-policy` returns `UNKNOWN_INFO` | Caller can't read every policy involved | Run it as the admin of the project that owns the resource |
+| `PERMISSION_DENIED` on `projects create`, `billing`, changing an org policy | Expected — those need folder/org/billing-account roles | Write down *why* in your notes |
+| `services enable` refused with `constraints/gcp.restrictServiceUsage` | The API is not on this sandbox's allow-list | Expected for anything outside the 7 allowed APIs |
 | Task check fails right after you fixed something | Propagation delay | Wait 30–60 s and click **Check** again |
 
 ## Reset a configuration
