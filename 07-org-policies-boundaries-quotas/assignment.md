@@ -1,22 +1,27 @@
 ---
 slug: org-policies-boundaries-quotas
+id: m4liya1onfxh
 type: challenge
 title: Org policies, project boundaries & quotas
 teaser: The guard-rails above IAM.
 tabs:
-- title: Terminal
+- id: aobk1oz6rxti
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: ouqsiywbclwh
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: e17mlj1mgll5
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: lmxqwa7lex4f
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /

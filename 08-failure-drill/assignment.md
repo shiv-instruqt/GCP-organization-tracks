@@ -1,22 +1,27 @@
 ---
 slug: failure-drill
+id: ptnmtr6x4ykh
 type: challenge
 title: 'Failure drill: break it, diagnose it, fix it narrowly'
 teaser: Diagnose an access denial and compare broad vs narrow fixes.
 tabs:
-- title: Terminal
+- id: n1jkho1fqy1j
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: f7y9ezwdauk6
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: 7dyknfhvwq3y
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: yaexgfxkmpki
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /

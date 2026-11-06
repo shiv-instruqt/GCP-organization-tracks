@@ -1,22 +1,27 @@
 ---
 slug: deliverable
+id: pj7qnupvzbxf
 type: challenge
 title: End-of-week deliverable
 teaser: Identity map, API notes, command log and least-privilege table.
 tabs:
-- title: Terminal
+- id: xy460vvmxxan
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: alzth6xhsyvu
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: qnt3iqarpcpw
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: 2yg8vekot1tf
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /

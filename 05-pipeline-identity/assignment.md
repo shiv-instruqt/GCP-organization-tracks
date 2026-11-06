@@ -1,22 +1,27 @@
 ---
 slug: pipeline-identity
+id: zzbkvjypd1rd
 type: challenge
 title: A least-privilege deployment pipeline identity
 teaser: ci-deployer, app-runtime and a narrowly scoped actAs.
 tabs:
-- title: Terminal
+- id: y2xlyy14fxwn
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: sq1yhlitdcmw
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: svxmwv9i1tey
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: at06wbzetywh
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /

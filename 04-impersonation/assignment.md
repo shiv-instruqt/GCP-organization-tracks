@@ -1,22 +1,27 @@
 ---
 slug: impersonation
+id: zqceewuginrt
 type: challenge
 title: Act as the developer with impersonation
 teaser: Short-lived tokens instead of keys.
 tabs:
-- title: Terminal
+- id: larsmru7mfg8
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: dxutumuvswee
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: rofbg13lm96b
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: 63xmmskx4upx
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /

@@ -1,22 +1,27 @@
 ---
 slug: iam-conditions
+id: 6eugdlxvamky
 type: challenge
 title: Time-bound cross-project access with IAM Conditions
 teaser: Access that expires by itself.
 tabs:
-- title: Terminal
+- id: hmgowm5c6xio
+  title: Terminal
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Terminal 2
+- id: uxelduy8bqav
+  title: Terminal 2
   type: terminal
   hostname: cloud-client
   workdir: /root/week1
-- title: Notes
+- id: dyezcbgnxu0i
+  title: Notes
   type: code
   hostname: cloud-client
   path: /root/week1
-- title: Cloud Consoles
+- id: 5y2235ojkq5k
+  title: Cloud Consoles
   type: service
   hostname: cloud-client
   path: /
